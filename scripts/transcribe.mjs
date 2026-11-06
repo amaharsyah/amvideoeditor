@@ -3,7 +3,11 @@
  * Transcribe an mp4 to word-level timestamps with whisper.cpp.
  *
  * Usage:
- *   node scripts/transcribe.mjs <input.mp4> [output.json]
+ *   node scripts/transcribe.mjs <input.mp4> [output.json] [--lang id] [--model small]
+ *
+ * --lang   spoken language code (default "id", Indonesian; "en", "auto", ...)
+ * --model  whisper model name in bin/whisper.cpp/models (default "small",
+ *          multilingual; "base.en" is English-only and faster)
  *
  * Output (default: <input>.json next to the video) is an array of
  *   { text: string, startMs: number, endMs: number }
@@ -18,11 +22,23 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const whisperDir = join(root, "bin", "whisper.cpp");
 const whisperBin = join(whisperDir, "build", "bin", "whisper-cli");
-const model = process.env.WHISPER_MODEL ?? join(whisperDir, "models", "ggml-base.en.bin");
+const positional = [];
+const opts = { lang: "id", model: "small" };
+const argv = process.argv.slice(2);
+for (let i = 0; i < argv.length; i++) {
+  const m = argv[i].match(/^--(lang|model)(?:=(.*))?$/);
+  if (m) opts[m[1]] = m[2] ?? argv[++i];
+  else positional.push(argv[i]);
+}
+const model = join(whisperDir, "models", `ggml-${opts.model}.bin`);
 
-const [input, outputArg] = process.argv.slice(2);
+const [input, outputArg] = positional;
 if (!input) {
-  console.error("Usage: node scripts/transcribe.mjs <input.mp4> [output.json]");
+  console.error("Usage: node scripts/transcribe.mjs <input.mp4> [output.json] [--lang id] [--model small]");
+  process.exit(1);
+}
+if (opts.model.endsWith(".en") && opts.lang !== "en") {
+  console.error(`Model "${opts.model}" is English-only; use --lang en or a multilingual model like "small".`);
   process.exit(1);
 }
 const inputPath = resolve(input);
@@ -53,7 +69,7 @@ try {
 
   // -ml 1 + -sow: one segment per word; -oj: JSON with millisecond offsets.
   const outBase = join(work, "whisper");
-  run(whisperBin, ["-m", model, "-f", wav, "-ml", "1", "-sow", "-oj", "-of", outBase, "-np"]);
+  run(whisperBin, ["-m", model, "-l", opts.lang, "-f", wav, "-ml", "1", "-sow", "-oj", "-of", outBase, "-np"]);
 
   const { transcription = [] } = JSON.parse(readFileSync(outBase + ".json", "utf8"));
   const words = transcription
