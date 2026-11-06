@@ -9,12 +9,12 @@ const calculateMetadata: CalculateMetadataFunction<Props> = () => {
 export const MyComposition = () => {
   return (
     <Composition
-      id="MyComp"
+      id="Reel"
       component={MyComponent}
       durationInFrames={60}
       fps={30}
-      width={1280}
-      height={720}
+      width={1080}
+      height={1920}
       calculateMetadata={calculateMetadata}
     />
   );
