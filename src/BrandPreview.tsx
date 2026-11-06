@@ -67,14 +67,14 @@ export const BrandPreview: React.FC = () => {
             marginBottom: 28,
           }}
         >
-          KEUANGAN · BISNIS
+          KEUANGAN PRIBADI
         </div>
         <div style={{ color: colors.cream, fontWeight: 900, fontSize: 92, lineHeight: 1.05 }}>
-          3 kesalahan yang bikin{" "}
+          3 kebiasaan yang bikin{" "}
           <span style={{ fontFamily: fonts.serif, fontStyle: "italic", fontWeight: 700, color: colors.gold }}>
-            bisnismu
+            gajimu
           </span>{" "}
-          rugi
+          habis
         </div>
       </div>
 
@@ -93,8 +93,8 @@ export const BrandPreview: React.FC = () => {
           lineHeight: 1.3,
         }}
       >
-        omzet naik{" "}
-        <span style={{ color: captionStyle.numberColor }}>40%</span>
+        gaji naik{" "}
+        <span style={{ color: captionStyle.numberColor }}>20%</span>
         <br />
         tapi{" "}
         <span
@@ -106,7 +106,7 @@ export const BrandPreview: React.FC = () => {
             textShadow: "none",
           }}
         >
-          kas kosong
+          tabungan nol
         </span>
       </div>
 

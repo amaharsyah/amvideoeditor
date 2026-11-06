@@ -2,7 +2,7 @@ import { loadFont } from "@remotion/fonts";
 import { staticFile } from "remotion";
 
 /**
- * Brand tokens: finance & business educator, maroon identity.
+ * Brand tokens: personal finance educator, maroon identity.
  * See brand/STYLE.md for how each one is used.
  */
 export const colors = {
