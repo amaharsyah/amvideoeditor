@@ -149,7 +149,8 @@ const DownChart: React.FC<{ data: ReelData; start: number; end: number }> = ({ d
   const opacity = interpolate(t, [start, start + 0.2, end - 0.4, end], [0, 1, 1, 0], clamp);
   const pts = [0, 30, 18, 52, 40, 78, 66, 110, 96, 140];
   const path = pts.map((y, i) => `${i === 0 ? "M" : "L"}${i * 30} ${y}`).join(" ");
-  const left = Math.min(1080 - 330, cx + sw * 1.3);
+  // 300px wide; keep a 60px margin on the right so the tag and line stay on screen.
+  const left = Math.min(1080 - 300 - 60, cx + sw * 1.3);
   return (
     <div style={{ position: "absolute", left, top: cy - sw * 0.9, opacity, width: 300 }}>
       <Tag tone="loss" size={32}>Saham ▼</Tag>
