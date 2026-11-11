@@ -248,7 +248,8 @@ function targetRaw(c, f, t, m) {
       const flip = choreo.stocksSide === "screenLeft" ? -1 : 1;
       const k = m.mode === "fall" && g === 0 ? Math.min(1, local / 1.6) ** 2 : 0;
       // Saham falls past the group below it, drifting toward the frame edge.
-      const cx = clampX(b.cx + flip * (s.dx + 0.45 * k) * b.sw);
+      // Falling Saham also drifts outward, off the frame edge, clear of the group below it.
+      const cx = clampX(b.cx + flip * (s.dx + 0.9 * k) * b.sw);
       const cy = b.cy + s.dy * b.sw + k * b.sw * 3.4;
       const rr = b.sw * 0.36;
       const th = c.phase + t * 1.8 * c.dir;

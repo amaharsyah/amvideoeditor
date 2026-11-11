@@ -196,9 +196,11 @@ const SplitLabels: React.FC<{ data: ReelData; start: number; fallAt: number; end
         if (!c) return null;
         const [x, y] = project(c[0], c[1], c[2]);
         const falling = g === 0 && t >= fallAt;
+        // The falling group's tag reads "Saham ▼" for a beat, then fades as the coins drop away.
+        const tagOpacity = falling ? interpolate(t, [fallAt + 0.6, fallAt + 1.2], [1, 0], clamp) : 1;
         return (
           // Keep the tag on screen even when its group sits near the frame edge.
-          <div key={g} style={{ position: "absolute", left: Math.max(130, Math.min(950, x)), top: y - 150, transform: "translateX(-50%)", opacity }}>
+          <div key={g} style={{ position: "absolute", left: Math.max(130, Math.min(950, x)), top: y - 150, transform: "translateX(-50%)", opacity: opacity * tagOpacity }}>
             <Tag tone={falling ? "loss" : "cream"} size={34}>
               {GROUPS[g]}
               {falling ? " ▼" : ""}

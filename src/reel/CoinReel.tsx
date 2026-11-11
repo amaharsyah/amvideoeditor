@@ -108,8 +108,9 @@ const Stage: React.FC<{ data: ReelData; reel: string; debug?: string }> = ({ dat
       ) : null}
 
       {t >= disclaimerFrom ? (
-        <div style={{ position: "absolute", left: 0, right: 0, bottom: 300, textAlign: "center", fontFamily: fonts.sans, fontWeight: 600, fontSize: 28, color: colors.cream, opacity: interpolate(t, [disclaimerFrom, disclaimerFrom + 0.3], [0, 0.9], { extrapolateRight: "clamp" }) }}>
-          {choreo.disclaimer!.text}
+        // Sits over moving footage, so it gets its own dark backing to stay readable.
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 300, display: "flex", justifyContent: "center", opacity: interpolate(t, [disclaimerFrom, disclaimerFrom + 0.3], [0, 1], { extrapolateRight: "clamp" }) }}>
+          <div style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 28, color: colors.cream, background: "rgba(20,16,18,0.82)", padding: "6px 16px", borderRadius: 10 }}>{choreo.disclaimer!.text}</div>
         </div>
       ) : null}
 
