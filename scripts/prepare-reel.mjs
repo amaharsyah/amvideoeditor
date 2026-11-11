@@ -13,6 +13,7 @@
  *   simulate   coin flock from choreo.json                                 -> sim.bin, sim.json
  *
  * --from skips earlier steps (e.g. --from simulate after editing choreo.json).
+ * --only runs just the listed steps (e.g. --only person,simulate).
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
@@ -29,6 +30,7 @@ const opt = (name, def) => {
 };
 const lang = opt("lang", "id");
 const from = opt("from", "footage");
+const only = opt("only", null);
 const [input, reel] = argv;
 if (!input || !reel || !STEPS.includes(from)) {
   console.error("Usage: node scripts/prepare-reel.mjs <recording.mp4> <reel-id> [--lang id] [--from " + STEPS.join("|") + "]");
@@ -43,7 +45,7 @@ const run = (cmd, args) => {
   const r = spawnSync(cmd, args, { stdio: "inherit" });
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
-const doStep = (s) => STEPS.indexOf(s) >= STEPS.indexOf(from);
+const doStep = (s) => (only ? only.split(",").includes(s) : STEPS.indexOf(s) >= STEPS.indexOf(from));
 const footage = join(dir, "footage.mp4");
 
 if (doStep("footage")) {
@@ -55,7 +57,14 @@ if (doStep("footage")) {
     footage,
   ]);
 }
-if (doStep("transcribe")) run("node", [join(root, "scripts", "transcribe.mjs"), footage, join(dir, "words.json"), "--lang", lang]);
+if (doStep("transcribe")) {
+  // With a hand-corrected transcript.txt, whisper only supplies timing and the
+  // corrected words go on top; otherwise whisper's words are used as they are.
+  const corrected = join(dir, "transcript.txt");
+  const heard = existsSync(corrected) ? join(work, "words-whisper.json") : join(dir, "words.json");
+  run("node", [join(root, "scripts", "transcribe.mjs"), footage, heard, "--lang", lang]);
+  if (existsSync(corrected)) run("python3", [join(root, "scripts", "align-transcript.py"), heard, corrected, join(dir, "words.json"), footage]);
+}
 if (doStep("track")) run("python3", [join(root, "scripts", "track.py"), footage, work]);
 if (doStep("person")) {
   run("ffmpeg", [

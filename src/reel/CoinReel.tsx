@@ -4,6 +4,7 @@ import { colors, fonts } from "../brand";
 import { CoinLayer } from "./CoinLayer";
 import { ReelData, resolveTime, useReel } from "./data";
 import { StageOverlays } from "./Overlays";
+import { Grain } from "./Grain";
 import { Subtitles } from "./Subtitles";
 
 export type CoinReelProps = { reel: string };
@@ -39,7 +40,27 @@ const Stage: React.FC<{ data: ReelData; reel: string }> = ({ data, reel }) => {
   const bottom = (1920 - (winCenter + WINDOW_H / 2)) * w;
   // Hook punch-in that settles as the window opens.
   const firstWindow = keys.find((k) => k.mode === "window")?.t ?? 0;
-  const zoom = interpolate(t, [0, Math.max(0.5, firstWindow)], [1.1, 1.0], { extrapolateRight: "clamp", easing: Easing.out(Easing.quad) });
+  const hookZoom = interpolate(t, [0, Math.max(0.5, firstWindow)], [1.1, 1.0], { extrapolateRight: "clamp", easing: Easing.out(Easing.quad) });
+  // Jump cuts: alternate the framing at every cut so the join reads as a deliberate
+  // punch-in. A new take (segment) changes size clearly; a tightened pause inside
+  // a take only nudges it.
+  const cutZoom = useMemo(() => {
+    const pieces = data.cuts?.pieces ?? [];
+    const out: { at: number; zoom: number }[] = [];
+    let seg = -1;
+    let inSeg = 0;
+    pieces.forEach((p, i) => {
+      if (i === 0 || p.segment !== pieces[i - 1].segment) {
+        seg++;
+        inSeg = 0;
+      } else inSeg++;
+      out.push({ at: p.at, zoom: (seg % 2 ? 1.09 : 1.0) + (inSeg % 2 ? 0.035 : 0) });
+    });
+    return out;
+  }, [data.cuts]);
+  let cz = 1;
+  for (const c of cutZoom) if (t >= c.at) cz = c.zoom;
+  const zoom = hookZoom * cz;
   // In window mode, slide the whole stage so the window sits a little above centre.
   const shiftY = (960 - 120 - winCenter) * w;
 
@@ -50,19 +71,22 @@ const Stage: React.FC<{ data: ReelData; reel: string }> = ({ data, reel }) => {
 
   return (
     <AbsoluteFill style={{ background: colors.ink }}>
-      <AbsoluteFill style={{ transform: `translateY(${shiftY}px) scale(${zoom})`, transformOrigin: `${cx}px ${cy}px` }}>
+      <AbsoluteFill style={{ transform: `translateY(${shiftY}px) scale(${zoom})`, transformOrigin: `${cx}px ${cy - sw * 0.35}px` }}>
         <AbsoluteFill style={{ clipPath: clip }}>
           <OffthreadVideo src={staticFile(`reels/${reel}/footage.mp4`)} />
-          <CoinLayer data={data} layer="back" candles={candles} />
+          <CoinLayer data={data} layer="back" candles={candles} reel={reel} />
           <OffthreadVideo src={staticFile(`reels/${reel}/person.webm`)} transparent muted />
         </AbsoluteFill>
         {/* Front coins may break out of the window's top edge, which sells the depth,
             but stop at its bottom edge so they never cross the subtitles. */}
         <AbsoluteFill style={{ clipPath: `inset(${Math.max(0, top - 260 * w)}px 0px ${bottom}px 0px)` }}>
-          <CoinLayer data={data} layer="front" candles={candles} />
+          <CoinLayer data={data} layer="front" candles={candles} reel={reel} />
         </AbsoluteFill>
         <StageOverlays data={data} />
       </AbsoluteFill>
+
+      {/* One grain over footage and CG alike, so both read as the same camera. */}
+      <Grain />
 
       <Subtitles words={words} keywords={choreo.keywords ?? []} y={subY} mode={w > 0.5 ? "window" : "full"} />
 

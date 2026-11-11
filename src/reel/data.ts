@@ -41,11 +41,15 @@ export type Choreo = {
   hook?: { text: string; to: Cue };
 };
 
+/** Edit decision list from scripts/assemble-edit.py: where each kept piece starts in the edit. */
+export type Cuts = { duration: number; pieces: { at: number; from: number; to: number; segment: string }[] };
+
 export type ReelData = {
   sim: Float32Array;
   meta: SimMeta;
   words: Word[];
   choreo: Choreo;
+  cuts: Cuts | null;
 };
 
 const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^\p{L}\p{N}]+/gu, "");
@@ -68,13 +72,14 @@ export function resolveTime(cue: Cue, words: Word[]): number {
 
 export async function loadReel(reel: string): Promise<ReelData> {
   const base = `reels/${reel}`;
-  const [simBuf, meta, words, choreo] = await Promise.all([
+  const [simBuf, meta, words, choreo, cuts] = await Promise.all([
     fetch(staticFile(`${base}/sim.bin`)).then((r) => r.arrayBuffer()),
     fetch(staticFile(`${base}/sim.json`)).then((r) => r.json()),
     fetch(staticFile(`${base}/words.json`)).then((r) => (r.ok ? r.json() : [])),
     fetch(staticFile(`${base}/choreo.json`)).then((r) => r.json()),
+    fetch(staticFile(`${base}/cuts.json`)).then((r) => (r.ok ? r.json() : null)),
   ]);
-  return { sim: new Float32Array(simBuf), meta, words, choreo };
+  return { sim: new Float32Array(simBuf), meta, words, choreo, cuts };
 }
 
 export function useReel(reel: string): ReelData | null {

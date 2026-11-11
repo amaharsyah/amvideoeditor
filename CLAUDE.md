@@ -14,7 +14,8 @@ Brand and editing rules: `brand/STYLE.md`. Scripts per reel: `naskah/`.
 4. Render: `npx remotion render CoinReel out/<id>.mp4 --props='{"reel":"<id>"}' --gl=swangle --concurrency=2`
    (run stills one at a time; parallel CLI runs collide).
 
-Setup on a fresh machine: whisper.cpp in `bin/whisper.cpp` with `ggml-small.bin`,
+Setup on a fresh machine: whisper.cpp in `bin/whisper.cpp` with `ggml-small.bin`, RNNoise model `bin/rnnoise/sh.rnnn`
+(from GregorR/rnnoise-models, somnolent-hogwash),
 `pip install -r scripts/requirements.txt`, MediaPipe models in `bin/mediapipe/`
 (hand_landmarker.task, pose_landmarker.task, selfie_multiclass.tflite), and on Linux `libegl1 libgles2`.
 Large media in `public/reels/*` is gitignored; `public/reels/_test` uses third-party footage and must never be committed.

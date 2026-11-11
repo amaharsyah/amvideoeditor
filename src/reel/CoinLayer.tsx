@@ -1,42 +1,55 @@
 import { ThreeCanvas } from "@remotion/three";
-import { useThree } from "@react-three/fiber";
-import React, { useLayoutEffect, useMemo, useRef } from "react";
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { useFrame, useThree } from "@react-three/fiber";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { cancelRender, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { colors } from "../brand";
-import { makeCoinFace } from "./coinTexture";
+import { makeCoinMaps } from "./coinTexture";
 import { CAM_D, FOV, ReelData } from "./data";
 
 /** Coin radius in output pixels at the subject plane. */
-const COIN_R = 27;
-/** Motion trail: copies of each coin a fraction of a frame back in time. */
-const TRAIL = [0.33, 0.66, 1.0];
-const TRAIL_OPACITY = [0.32, 0.18, 0.08];
+const COIN_R = 26;
 const CANDLES = 40;
+/** Motion blur: sub-frame renders averaged over a 180 degree shutter (half a frame). */
+const SHUTTER = 0.5;
+const SAMPLES = 6;
 
 type Layer = "back" | "front";
+type Poser = (t: number) => void;
 
-const Environment: React.FC = () => {
+/** Reflections come from the real room: the empty-background plate becomes the environment. */
+const RoomEnvironment: React.FC<{ plate: string }> = ({ plate }) => {
   const { gl, scene } = useThree();
+  const [handle] = useState(() => delayRender("Loading room environment"));
   useLayoutEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
-    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = env;
+    let env: THREE.Texture | null = null;
+    new THREE.TextureLoader().load(
+      plate,
+      (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        env = pmrem.fromEquirectangular(tex).texture;
+        scene.environment = env;
+        scene.environmentIntensity = 1.15;
+        tex.dispose();
+        continueRender(handle);
+      },
+      undefined,
+      (e) => cancelRender(e),
+    );
     return () => {
-      env.dispose();
+      env?.dispose();
       pmrem.dispose();
     };
-  }, [gl, scene]);
+  }, [gl, scene, plate, handle]);
   return null;
 };
 
 const dummy = new THREE.Object3D();
 const tint = new THREE.Color();
 const WHITE = new THREE.Color("#ffffff");
-const LOSS = new THREE.Color("#ff5a5a");
+const LOSS = new THREE.Color("#ff4a4a");
 
-/** Read one coin at a fractional frame, interpolating between stored frames. */
 function sample(sim: Float32Array, count: number, stride: number, frames: number, f: number, i: number, out: number[]) {
   const f0 = Math.max(0, Math.min(frames - 1, Math.floor(f)));
   const f1 = Math.min(frames - 1, f0 + 1);
@@ -47,79 +60,51 @@ function sample(sim: Float32Array, count: number, stride: number, frames: number
   return out;
 }
 
-const Coins: React.FC<{ data: ReelData; layer: Layer }> = ({ data, layer }) => {
-  const frame = useCurrentFrame();
+const Coins: React.FC<{ data: ReelData; layer: Layer; register: (p: Poser) => void }> = ({ data, layer, register }) => {
   const { meta, sim } = data;
   const N = meta.count;
-  const meshes = useRef<(THREE.InstancedMesh | null)[]>([]);
-
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const maps = useMemo(() => makeCoinMaps(), []);
   const geometry = useMemo(() => {
-    const g = new THREE.CylinderGeometry(1, 1, 0.12, 48, 1);
-    g.rotateX(Math.PI / 2); // face the camera at rotation 0
+    const g = new THREE.CylinderGeometry(1, 1, 0.13, 64, 1);
+    g.rotateX(Math.PI / 2);
     return g;
   }, []);
   const materials = useMemo(() => {
-    const face = makeCoinFace();
-    const mk = (opacity: number) => {
-      const transparent = opacity < 1;
-      // Edge in brand maroon: the identity motif that makes the coins ours, not stock gold.
-      const edge = new THREE.MeshStandardMaterial({ color: colors.maroon, metalness: 0.7, roughness: 0.35, transparent, opacity, depthWrite: !transparent });
-      const faceMat = new THREE.MeshStandardMaterial({ map: face, metalness: 0.95, roughness: 0.28, emissive: new THREE.Color(colors.gold), emissiveIntensity: 0, transparent, opacity, depthWrite: !transparent });
-      return [edge, faceMat, faceMat];
-    };
-    return [mk(1), ...TRAIL_OPACITY.map(mk)];
-  }, []);
+    const brass = { metalness: 1, color: new THREE.Color("#ffffff") };
+    const edge = new THREE.MeshStandardMaterial({ ...brass, map: maps.color, roughness: 0.42, normalMap: maps.reeding, normalScale: new THREE.Vector2(0.6, 0.6) });
+    const face = new THREE.MeshStandardMaterial({ ...brass, map: maps.color, roughnessMap: maps.roughness, roughness: 1, normalMap: maps.normal, normalScale: new THREE.Vector2(1, 1), emissive: new THREE.Color("#E0B04C"), emissiveIntensity: 0 });
+    return [edge, face, face];
+  }, [maps]);
 
   useLayoutEffect(() => {
     const tmp: number[] = new Array(meta.stride).fill(0);
-    const glow = meta.glow[Math.min(frame, meta.frames - 1)] ?? 0;
-    const offsets = [0, ...TRAIL];
-    offsets.forEach((back, m) => {
-      const mesh = meshes.current[m];
-      if (!mesh) return;
-      (materials[m][1] as THREE.MeshStandardMaterial).emissiveIntensity = glow * 0.35;
+    register((t) => {
+      const m = mesh.current;
+      if (!m) return;
+      const glow = meta.glow[Math.max(0, Math.min(meta.frames - 1, Math.round(t)))] ?? 0;
+      (materials[1] as THREE.MeshStandardMaterial).emissiveIntensity = glow * 0.25;
       for (let i = 0; i < N; i++) {
-        const [x, y, z, rx, ry, rz, s, red] = sample(sim, N, meta.stride, meta.frames, frame - back, i, tmp);
+        const [x, y, z, rx, ry, rz, s, red] = sample(sim, N, meta.stride, meta.frames, t, i, tmp);
         const inLayer = layer === "front" ? z >= 0 : z < 0;
-        // Trails only show for fast coins, otherwise they just thicken a resting coin.
-        let scale = inLayer ? s * COIN_R : 0;
-        if (back > 0 && scale > 0) {
-          const [px, py] = sample(sim, N, meta.stride, meta.frames, frame - back + 0.33, i, new Array(meta.stride).fill(0));
-          if (Math.hypot(px - x, py - y) < 6) scale = 0;
-        }
         dummy.position.set(x - 540, 960 - y, z);
         dummy.rotation.set(rx, ry, rz);
-        dummy.scale.setScalar(scale);
+        dummy.scale.setScalar(inLayer ? s * COIN_R : 0);
         dummy.updateMatrix();
-        mesh.setMatrixAt(i, dummy.matrix);
+        m.setMatrixAt(i, dummy.matrix);
         tint.copy(WHITE).lerp(LOSS, red);
-        mesh.setColorAt(i, tint);
+        m.setColorAt(i, tint);
       }
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      m.instanceMatrix.needsUpdate = true;
+      if (m.instanceColor) m.instanceColor.needsUpdate = true;
     });
-  }, [frame, N, layer, materials, meta, sim]);
+  }, [N, layer, materials, meta, sim, register]);
 
-  return (
-    <>
-      {materials.map((mats, m) => (
-        <instancedMesh
-          key={m}
-          ref={(el) => {
-            meshes.current[m] = el;
-          }}
-          args={[geometry, mats, N]}
-          frustumCulled={false}
-          renderOrder={m === 0 ? 0 : 1}
-        />
-      ))}
-    </>
-  );
+  return <instancedMesh ref={mesh} args={[geometry, materials, N]} frustumCulled={false} castShadow />;
 };
 
 /** Red candlesticks raining down during the hook; they slow when the speaker calms down. */
-const Candles: React.FC<{ from: number; slowAt: number; to: number; layer: Layer }> = ({ from, slowAt, to, layer }) => {
-  const frame = useCurrentFrame();
+const Candles: React.FC<{ from: number; slowAt: number; to: number; layer: Layer; register: (p: Poser) => void }> = ({ from, slowAt, to, layer, register }) => {
   const { fps } = useVideoConfig();
   const bodyRef = useRef<THREE.InstancedMesh>(null);
   const wickRef = useRef<THREE.InstancedMesh>(null);
@@ -134,40 +119,156 @@ const Candles: React.FC<{ from: number; slowAt: number; to: number; layer: Layer
       }),
     [],
   );
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ color: "#C8343F", metalness: 0.2, roughness: 0.45, emissive: new THREE.Color("#5a0d14"), emissiveIntensity: 0.6 }), []);
+  const material = useMemo(() => new THREE.MeshPhysicalMaterial({ color: "#D12E3A", metalness: 0, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.1, emissive: new THREE.Color("#4a0a10"), emissiveIntensity: 0.5 }), []);
   const box = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
 
   useLayoutEffect(() => {
-    const t = frame / fps;
-    // Time warp: full speed until "tenang", then the fall eases to a drift.
-    const warp = (tt: number) => {
-      if (tt < slowAt) return tt - from;
-      const k = 0.18;
-      return slowAt - from + (tt - slowAt) * k + (1 - k) * 0.6 * (1 - Math.exp(-(tt - slowAt) / 0.6));
-    };
-    const local = warp(t);
-    const fade = Math.max(0, Math.min(1, (to - t) / 0.5)) * Math.min(1, (t - from) / 0.2);
-    seeds.forEach((s, i) => {
-      const inLayer = layer === "front" ? s.z >= 0 : s.z < 0;
-      const y = s.y0 + s.speed * local;
-      const visible = t >= from && t <= to && inLayer ? fade : 0;
-      dummy.position.set(s.x - 540, 960 - y, s.z);
-      dummy.rotation.set(s.tilt, s.spin * local, s.tilt * 0.5 + s.spin * local * 0.3);
-      dummy.scale.set(38 * visible, s.h * visible, 38 * visible);
-      dummy.updateMatrix();
-      bodyRef.current?.setMatrixAt(i, dummy.matrix);
-      dummy.scale.set(7 * visible, (s.h + 90) * visible, 7 * visible);
-      dummy.updateMatrix();
-      wickRef.current?.setMatrixAt(i, dummy.matrix);
+    register((frame) => {
+      const t = frame / fps;
+      const warp = (tt: number) => {
+        if (tt < slowAt) return tt - from;
+        const k = 0.18;
+        return slowAt - from + (tt - slowAt) * k + (1 - k) * 0.6 * (1 - Math.exp(-(tt - slowAt) / 0.6));
+      };
+      const local = warp(t);
+      const fade = Math.max(0, Math.min(1, (to - t) / 0.5)) * Math.min(1, (t - from) / 0.2);
+      seeds.forEach((s, i) => {
+        const inLayer = layer === "front" ? s.z >= 0 : s.z < 0;
+        const y = s.y0 + s.speed * local;
+        const v = t >= from && t <= to && inLayer ? fade : 0;
+        dummy.position.set(s.x - 540, 960 - y, s.z);
+        dummy.rotation.set(s.tilt, s.spin * local, s.tilt * 0.5 + s.spin * local * 0.3);
+        dummy.scale.set(38 * v, s.h * v, 38 * v);
+        dummy.updateMatrix();
+        bodyRef.current?.setMatrixAt(i, dummy.matrix);
+        dummy.scale.set(7 * v, (s.h + 90) * v, 7 * v);
+        dummy.updateMatrix();
+        wickRef.current?.setMatrixAt(i, dummy.matrix);
+      });
+      if (bodyRef.current) bodyRef.current.instanceMatrix.needsUpdate = true;
+      if (wickRef.current) wickRef.current.instanceMatrix.needsUpdate = true;
     });
-    if (bodyRef.current) bodyRef.current.instanceMatrix.needsUpdate = true;
-    if (wickRef.current) wickRef.current.instanceMatrix.needsUpdate = true;
-  }, [frame, fps, from, slowAt, to, layer, seeds]);
+  }, [fps, from, slowAt, to, layer, seeds, register]);
 
   return (
     <>
-      <instancedMesh ref={bodyRef} args={[box, material, CANDLES]} frustumCulled={false} />
-      <instancedMesh ref={wickRef} args={[box, material, CANDLES]} frustumCulled={false} />
+      <instancedMesh ref={bodyRef} args={[box, material, CANDLES]} frustumCulled={false} castShadow />
+      <instancedMesh ref={wickRef} args={[box, material, CANDLES]} frustumCulled={false} castShadow />
+    </>
+  );
+};
+
+/**
+ * Renders the scene SAMPLES times across the shutter interval and averages the
+ * results, like a real camera exposing a moving object. Accumulation happens in
+ * premultiplied linear light; the final pass tone-maps and writes sRGB.
+ */
+const MotionBlurRenderer: React.FC<{ posers: React.MutableRefObject<Poser[]> }> = ({ posers }) => {
+  const frame = useCurrentFrame();
+  const { gl, scene, camera, size } = useThree();
+  const res = useMemo(() => {
+    const opts = { type: THREE.HalfFloatType, colorSpace: THREE.LinearSRGBColorSpace, samples: 4 };
+    const one = new THREE.WebGLRenderTarget(size.width * gl.getPixelRatio(), size.height * gl.getPixelRatio(), opts);
+    const acc = new THREE.WebGLRenderTarget(size.width * gl.getPixelRatio(), size.height * gl.getPixelRatio(), { ...opts, samples: 0 });
+    const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const addMat = new THREE.ShaderMaterial({
+      uniforms: { src: { value: one.texture }, w: { value: 1 / SAMPLES } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }",
+      fragmentShader: "uniform sampler2D src; uniform float w; varying vec2 vUv; void main(){ gl_FragColor = texture2D(src, vUv) * w; }",
+      blending: THREE.CustomBlending,
+      blendSrc: THREE.OneFactor,
+      blendDst: THREE.OneFactor,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const outMat = new THREE.ShaderMaterial({
+      uniforms: { src: { value: acc.texture } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }",
+      fragmentShader: `
+        uniform sampler2D src; varying vec2 vUv;
+        vec3 aces(vec3 x){ x *= 0.6; return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0., 1.); }
+        vec3 toSRGB(vec3 c){ return mix(c*12.92, 1.055*pow(c, vec3(1./2.4))-0.055, step(0.0031308, c)); }
+        void main(){
+          vec4 p = texture2D(src, vUv);
+          if (p.a < 0.0005) { gl_FragColor = vec4(0.); return; }
+          vec3 c = toSRGB(aces(p.rgb / p.a));
+          gl_FragColor = vec4(c * p.a, p.a);
+        }`,
+      blending: THREE.CustomBlending,
+      blendSrc: THREE.OneFactor,
+      blendDst: THREE.ZeroFactor,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), addMat);
+    const quadScene = new THREE.Scene();
+    quadScene.add(quad);
+    return { one, acc, quadCam, addMat, outMat, quad, quadScene };
+  }, [gl, size.width, size.height]);
+
+  useFrame(() => {
+    const { one, acc, quadCam, addMat, outMat, quad, quadScene } = res;
+    gl.autoClear = false;
+    gl.setClearColor(0x000000, 0);
+    gl.setRenderTarget(acc);
+    gl.clear(true, true, true);
+    for (let s = 0; s < SAMPLES; s++) {
+      const t = frame - SHUTTER * (1 - s / (SAMPLES - 1));
+      posers.current.forEach((p) => p(t));
+      gl.setRenderTarget(one);
+      gl.clear(true, true, true);
+      gl.render(scene, camera);
+      quad.material = addMat;
+      gl.setRenderTarget(acc);
+      gl.render(quadScene, quadCam);
+    }
+    quad.material = outMat;
+    gl.setRenderTarget(null);
+    gl.clear(true, true, true);
+    gl.render(quadScene, quadCam);
+  }, 1);
+  return null;
+};
+
+/** Invisible surfaces that only show the shadows cast on them: the body plane and the wall. */
+const ShadowCatcher: React.FC<{ z: number; opacity: number }> = ({ z, opacity }) => (
+  <mesh position={[0, 0, z]} receiveShadow>
+    <planeGeometry args={[2400, 3600]} />
+    <shadowMaterial opacity={opacity} transparent />
+  </mesh>
+);
+
+const Scene: React.FC<{ data: ReelData; layer: Layer; candles?: { from: number; slowAt: number; to: number }; plate: string }> = ({ data, layer, candles, plate }) => {
+  const posers = useRef<Poser[]>([]);
+  const register = useMemo(() => (p: Poser) => {
+    posers.current.push(p);
+  }, []);
+  const key = useRef<THREE.DirectionalLight>(null);
+  useLayoutEffect(() => {
+    const l = key.current;
+    if (!l) return;
+    const cam = l.shadow.camera as THREE.OrthographicCamera;
+    cam.left = -800;
+    cam.right = 800;
+    cam.top = 1200;
+    cam.bottom = -1200;
+    cam.near = 10;
+    cam.far = 6000;
+    cam.updateProjectionMatrix();
+    l.shadow.mapSize.set(2048, 2048);
+    l.shadow.radius = 6;
+    l.shadow.bias = -0.0004;
+  }, []);
+  return (
+    <>
+      <RoomEnvironment plate={plate} />
+      {/* Ceiling light slightly in front of the speaker, as in the footage; it casts the shadows. */}
+      <directionalLight ref={key} position={[-250, 1600, 1500]} intensity={1.6} color="#fff6ea" castShadow />
+      <ambientLight intensity={0.15} />
+      <Coins data={data} layer={layer} register={register} />
+      {candles ? <Candles {...candles} layer={layer} register={register} /> : null}
+      {layer === "front" ? <ShadowCatcher z={-20} opacity={0.32} /> : <ShadowCatcher z={-700} opacity={0.22} />}
+      <MotionBlurRenderer posers={posers} />
     </>
   );
 };
@@ -175,23 +276,25 @@ const Candles: React.FC<{ from: number; slowAt: number; to: number; layer: Layer
 export const CoinLayer: React.FC<{
   data: ReelData;
   layer: Layer;
+  reel: string;
   candles?: { from: number; slowAt: number; to: number };
-}> = ({ data, layer, candles }) => {
+}> = ({ data, layer, reel, candles }) => {
   return (
     <ThreeCanvas
       width={1080}
       height={1920}
-      style={{ position: "absolute", inset: 0 }}
+      shadows="soft"
+      style={{
+        position: "absolute",
+        inset: 0,
+        // Match the footage: CG straight out of the renderer is sharper than a phone
+        // camera. Coins behind the body sit further away, so they are softer still.
+        filter: layer === "back" ? "blur(1.6px)" : "blur(0.6px)",
+      }}
       camera={{ fov: FOV, position: [0, 0, CAM_D], near: 10, far: 10000 }}
-      gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
+      gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true, premultipliedAlpha: true }}
     >
-      <Environment />
-      {/* Warm key from the upper left to sit with indoor daylight footage. */}
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[-600, 900, 1200]} intensity={2.2} color="#fff1dc" />
-      <directionalLight position={[700, -300, 600]} intensity={0.6} color={colors.maroonLight} />
-      <Coins data={data} layer={layer} />
-      {candles ? <Candles {...candles} layer={layer} /> : null}
+      <Scene data={data} layer={layer} candles={candles} plate={staticFile(`reels/${reel}/plate.jpg`)} />
     </ThreeCanvas>
   );
 };

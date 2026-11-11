@@ -17,3 +17,6 @@ public/reels/*/footage.mp4
 public/reels/*/person.webm
 public/reels/*/sim.bin
 bin/mediapipe
+bin/rnnoise
+__pycache__/
+public/recordings/*-edit.*

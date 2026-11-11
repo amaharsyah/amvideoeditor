@@ -1,0 +1,79 @@
+{
+ "source": "public/recordings/01-dana-darurat-raw.mov",
+ "audioChain": "highpass=f=85:poles=2,bandreject=f=100:width_type=q:w=12,bandreject=f=1885.7:width_type=q:w=40,bandreject=f=2466.4:width_type=q:w=40,bandreject=f=2597.9:width_type=q:w=40,lowpass=f=15000,afftdn=nr=10:nf=-40:tn=1,arnndn=m=bin/rnnoise/sh.rnnn:mix=0.9,equalizer=f=250:t=q:w=1.2:g=-2.5,equalizer=f=3200:t=q:w=1.0:g=2.5,equalizer=f=9000:t=q:w=1.5:g=1.5,deesser=i=0.35,acompressor=threshold=-24dB:ratio=3:attack=8:release=120:makeup=4",
+ "output": "public/recordings/01-dana-darurat-edit.mkv",
+ "maxPause": 0.28,
+ "segments": [
+  {
+   "from": 26.25,
+   "to": 33.0,
+   "note": "hook take 2: IHSG lagi jatuh ... tenang-tenang saja"
+  },
+  {
+   "from": 33.6,
+   "to": 38.4,
+   "note": "karena sebelum investasi saya siapkan ini"
+  },
+  {
+   "from": 40.05,
+   "to": 46.12,
+   "note": "dana darurat itu adalah uang ... tidak terduga"
+  },
+  {
+   "from": 55.3,
+   "to": 64.5,
+   "note": "kena PHK, sakit, kendaraan rusak ... fungsi dari dana darurat",
+   "maxPause": 0.6
+  },
+  {
+   "from": 79.57,
+   "to": 92.5,
+   "note": "punya saya ... 9 bulan ... hidup normal selama 9 bulan"
+  },
+  {
+   "from": 110.62,
+   "to": 115.3,
+   "note": "dan ini penting. dana darurat saya tidak simpan di saham"
+  },
+  {
+   "from": 116.19,
+   "to": 119.17,
+   "note": "saya taruh di reksa dana pasar uang"
+  },
+  {
+   "from": 119.4,
+   "to": 127.08,
+   "note": "risikonya rendah ... maksimal 2 hari"
+  },
+  {
+   "from": 139.0,
+   "to": 147.94,
+   "note": "naiknya memang nggak seberapa ... tugasnya adalah menjaga"
+  },
+  {
+   "from": 148.85,
+   "to": 158.2,
+   "note": "nah sisa dari ini baru saya investasikan ... berbagai sektor"
+  },
+  {
+   "from": 166.92,
+   "to": 171.6,
+   "note": "jadi waktu saham turun begini, yang lain masih bisa menahan"
+  },
+  {
+   "from": 171.8,
+   "to": 173.62,
+   "note": "makanya saya tidak panik"
+  },
+  {
+   "from": 176.36,
+   "to": 179.0,
+   "note": "bukan karena berani, tapi karena memang siap"
+  },
+  {
+   "from": 179.3,
+   "to": 184.78,
+   "note": "kalau kamu dana daruratnya sudah cukup untuk berapa bulan, komen di bawah"
+  }
+ ]
+}
