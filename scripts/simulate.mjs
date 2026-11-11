@@ -181,7 +181,24 @@ function shieldTarget(c, t, b, omega = 1.1, spread = 1) {
   ];
 }
 
+/** Push a target that lands on the face (in front of the head) out to the face zone's edge. */
+function clearFace(p, b) {
+  const R = b.sw * 0.9;
+  const dx = p[0] - b.fx;
+  const dy = p[1] - b.fy;
+  const d = Math.hypot(dx, dy);
+  if (d >= R || p[2] < -b.sw * 0.2) return p;
+  if (d < 1) return [b.fx + R, p[1], p[2]];
+  return [b.fx + (dx / d) * R, b.fy + (dy / d) * R, p[2]];
+}
+
 function target(c, f, t, m) {
+  const tg = targetRaw(c, f, t, m);
+  if (!tg || !m || m.mode === "pool" || m.mode === "pull") return tg;
+  return { ...tg, p: clearFace(tg.p, body[f]) };
+}
+
+function targetRaw(c, f, t, m) {
   const b = body[f];
   if (!m || m.mode === "idle") return null;
   const local = t - m.t;
@@ -345,9 +362,9 @@ for (let f = 0; f < F; f++) {
       {
         const dx = c.p[0] - b.fx, dy = c.p[1] - b.fy;
         const d = Math.hypot(dx, dy) + 1;
-        const R = b.sw * 0.62;
+        const R = b.sw * 0.85;
         if (d < R && c.p[2] > -b.sw * 0.2) {
-          const k = 14000 * (1 - d / R) ** 1.5;
+          const k = 22000 * (1 - d / R) ** 1.3;
           ac[0] += (dx / d) * k;
           ac[1] += (dy / d) * k;
         }

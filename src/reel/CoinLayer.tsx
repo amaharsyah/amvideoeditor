@@ -8,17 +8,19 @@ import { CAM_D, FOV, ReelData } from "./data";
 
 /** Coin radius in output pixels at the subject plane. */
 const COIN_R = 26;
-const CANDLES = 40;
+const CANDLES = 24;
 /** Motion blur: sub-frame renders averaged over a 180 degree shutter (half a frame). */
 const SHUTTER = 0.5;
-const SAMPLES = 6;
+const SAMPLES = 5;
+/** The 3D layers render at half size and are scaled up: the footage itself is ~576x1024. */
+const RENDER_SCALE = 0.5;
 
 type Layer = "back" | "front";
 type Poser = (t: number) => void;
 
 /** Reflections come from the real room: the empty-background plate becomes the environment. */
 const RoomEnvironment: React.FC<{ plate: string }> = ({ plate }) => {
-  const { gl, scene } = useThree();
+  const { gl, scene, advance } = useThree();
   const [handle] = useState(() => delayRender("Loading room environment"));
   useLayoutEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
@@ -32,6 +34,8 @@ const RoomEnvironment: React.FC<{ plate: string }> = ({ plate }) => {
         scene.environment = env;
         scene.environmentIntensity = 1.15;
         tex.dispose();
+        // The frame was already drawn before the plate arrived; draw it again with reflections.
+        advance(performance.now());
         continueRender(handle);
       },
       undefined,
@@ -41,7 +45,7 @@ const RoomEnvironment: React.FC<{ plate: string }> = ({ plate }) => {
       env?.dispose();
       pmrem.dispose();
     };
-  }, [gl, scene, plate, handle]);
+  }, [gl, scene, plate, handle, advance]);
   return null;
 };
 
@@ -167,7 +171,7 @@ const MotionBlurRenderer: React.FC<{ posers: React.MutableRefObject<Poser[]> }> 
   const frame = useCurrentFrame();
   const { gl, scene, camera, size } = useThree();
   const res = useMemo(() => {
-    const opts = { type: THREE.HalfFloatType, colorSpace: THREE.LinearSRGBColorSpace, samples: 4 };
+    const opts = { type: THREE.HalfFloatType, colorSpace: THREE.LinearSRGBColorSpace, samples: 0 };
     const one = new THREE.WebGLRenderTarget(size.width * gl.getPixelRatio(), size.height * gl.getPixelRatio(), opts);
     const acc = new THREE.WebGLRenderTarget(size.width * gl.getPixelRatio(), size.height * gl.getPixelRatio(), { ...opts, samples: 0 });
     const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -212,9 +216,18 @@ const MotionBlurRenderer: React.FC<{ posers: React.MutableRefObject<Poser[]> }> 
     gl.setClearColor(0x000000, 0);
     gl.setRenderTarget(acc);
     gl.clear(true, true, true);
+    const cam = camera as THREE.PerspectiveCamera;
+    const w = size.width * gl.getPixelRatio();
+    const h = size.height * gl.getPixelRatio();
+    // Sub-pixel offsets per sample: averaging them anti-aliases edges without MSAA.
+    const jitter = [[0, 0], [0.5, 0.25], [-0.25, 0.5], [0.25, -0.5], [-0.5, -0.25]];
     for (let s = 0; s < SAMPLES; s++) {
       const t = frame - SHUTTER * (1 - s / (SAMPLES - 1));
       posers.current.forEach((p) => p(t));
+      const [jx, jy] = jitter[s % jitter.length];
+      cam.setViewOffset(w, h, jx, jy, w, h);
+      // Shadows move far less than a pixel within one shutter: map them once per frame.
+      gl.shadowMap.needsUpdate = s === Math.floor(SAMPLES / 2);
       gl.setRenderTarget(one);
       gl.clear(true, true, true);
       gl.render(scene, camera);
@@ -222,11 +235,19 @@ const MotionBlurRenderer: React.FC<{ posers: React.MutableRefObject<Poser[]> }> 
       gl.setRenderTarget(acc);
       gl.render(quadScene, quadCam);
     }
+    cam.clearViewOffset();
     quad.material = outMat;
     gl.setRenderTarget(null);
     gl.clear(true, true, true);
     gl.render(quadScene, quadCam);
   }, 1);
+  return null;
+};
+
+/** Debug path: pose at the current frame and let R3F render normally. */
+const PlainPose: React.FC<{ posers: React.MutableRefObject<Poser[]> }> = ({ posers }) => {
+  const frame = useCurrentFrame();
+  useFrame(() => posers.current.forEach((p) => p(frame)), -1);
   return null;
 };
 
@@ -238,7 +259,7 @@ const ShadowCatcher: React.FC<{ z: number; opacity: number }> = ({ z, opacity })
   </mesh>
 );
 
-const Scene: React.FC<{ data: ReelData; layer: Layer; candles?: { from: number; slowAt: number; to: number }; plate: string }> = ({ data, layer, candles, plate }) => {
+const Scene: React.FC<{ data: ReelData; layer: Layer; candles?: { from: number; slowAt: number; to: number }; plate: string; debug?: string }> = ({ data, layer, candles, plate, debug }) => {
   const posers = useRef<Poser[]>([]);
   const register = useMemo(() => (p: Poser) => {
     posers.current.push(p);
@@ -255,20 +276,22 @@ const Scene: React.FC<{ data: ReelData; layer: Layer; candles?: { from: number; 
     cam.near = 10;
     cam.far = 6000;
     cam.updateProjectionMatrix();
-    l.shadow.mapSize.set(2048, 2048);
-    l.shadow.radius = 6;
+    l.shadow.mapSize.set(1024, 1024);
+    l.shadow.radius = 8;
     l.shadow.bias = -0.0004;
   }, []);
   return (
     <>
-      <RoomEnvironment plate={plate} />
+      {debug === "noenv" ? null : <RoomEnvironment plate={plate} />}
       {/* Ceiling light slightly in front of the speaker, as in the footage; it casts the shadows. */}
-      <directionalLight ref={key} position={[-250, 1600, 1500]} intensity={1.6} color="#fff6ea" castShadow />
+      {/* Room light from above and in front of the speaker (the face is evenly lit in the
+          footage), so shadows land close behind each coin as soft contact shadows. */}
+      <directionalLight ref={key} position={[-200, 900, 2400]} intensity={1.3} color="#fff6ea" castShadow />
       <ambientLight intensity={0.15} />
       <Coins data={data} layer={layer} register={register} />
       {candles ? <Candles {...candles} layer={layer} register={register} /> : null}
-      {layer === "front" ? <ShadowCatcher z={-20} opacity={0.32} /> : <ShadowCatcher z={-700} opacity={0.22} />}
-      <MotionBlurRenderer posers={posers} />
+      {layer === "front" ? <ShadowCatcher z={-20} opacity={0.16} /> : <ShadowCatcher z={-700} opacity={0.12} />}
+      {debug === "noblur" ? <PlainPose posers={posers} /> : <MotionBlurRenderer posers={posers} />}
     </>
   );
 };
@@ -278,23 +301,30 @@ export const CoinLayer: React.FC<{
   layer: Layer;
   reel: string;
   candles?: { from: number; slowAt: number; to: number };
-}> = ({ data, layer, reel, candles }) => {
+  debug?: string;
+}> = ({ data, layer, reel, candles, debug }) => {
   return (
     <ThreeCanvas
-      width={1080}
-      height={1920}
+      width={1080 * RENDER_SCALE}
+      height={1920 * RENDER_SCALE}
       shadows="soft"
+      onCreated={({ gl }) => {
+        gl.shadowMap.autoUpdate = false;
+      }}
       style={{
         position: "absolute",
-        inset: 0,
+        left: 0,
+        top: 0,
+        transform: `scale(${1 / RENDER_SCALE})`,
+        transformOrigin: "0 0",
         // Match the footage: CG straight out of the renderer is sharper than a phone
         // camera. Coins behind the body sit further away, so they are softer still.
-        filter: layer === "back" ? "blur(1.6px)" : "blur(0.6px)",
+        filter: layer === "back" ? "blur(0.8px)" : "blur(0.25px)",
       }}
       camera={{ fov: FOV, position: [0, 0, CAM_D], near: 10, far: 10000 }}
-      gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true, premultipliedAlpha: true }}
+      gl={{ alpha: true, antialias: false, preserveDrawingBuffer: true, premultipliedAlpha: true }}
     >
-      <Scene data={data} layer={layer} candles={candles} plate={staticFile(`reels/${reel}/plate.jpg`)} />
+      <Scene data={data} layer={layer} candles={candles} plate={staticFile(`reels/${reel}/plate.jpg`)} debug={debug} />
     </ThreeCanvas>
   );
 };

@@ -7,12 +7,13 @@ import { StageOverlays } from "./Overlays";
 import { Grain } from "./Grain";
 import { Subtitles } from "./Subtitles";
 
-export type CoinReelProps = { reel: string };
+/** debug: "noblur" renders without the motion-blur pass, "noenv" without the room reflections. */
+export type CoinReelProps = { reel: string; debug?: string };
 
 /** Height of the cinematic window (the "letterboxed" middle state), in output pixels. */
 const WINDOW_H = 1080;
 
-const Stage: React.FC<{ data: ReelData; reel: string }> = ({ data, reel }) => {
+const Stage: React.FC<{ data: ReelData; reel: string; debug?: string }> = ({ data, reel, debug }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const t = frame / fps;
@@ -35,7 +36,9 @@ const Stage: React.FC<{ data: ReelData; reel: string }> = ({ data, reel }) => {
   const f = Math.min(frame, meta.frames - 1);
   const [cx, cy, sw] = meta.body[f];
   // Centre the window on the region where the coins live (head to hands).
-  const winCenter = Math.max(WINDOW_H / 2, Math.min(1920 - WINDOW_H / 2, cy + sw * 0.35));
+  // Shoulders sit at cy; the head is roughly one shoulder-width above them and the hands
+  // work in front of the chest, so this centre keeps hair and hands inside the window.
+  const winCenter = Math.max(WINDOW_H / 2, Math.min(1920 - WINDOW_H / 2, cy - sw * 0.15));
   const top = (winCenter - WINDOW_H / 2) * w;
   const bottom = (1920 - (winCenter + WINDOW_H / 2)) * w;
   // Hook punch-in that settles as the window opens.
@@ -66,21 +69,25 @@ const Stage: React.FC<{ data: ReelData; reel: string }> = ({ data, reel }) => {
 
   const candles = choreo.candles ? { from: at(choreo.candles.from), slowAt: at(choreo.candles.slowAt), to: at(choreo.candles.to) } : undefined;
   const clip = `inset(${top}px 0px ${bottom}px 0px)`;
-  const subY = w > 0.5 ? winCenter + WINDOW_H / 2 + shiftY + 40 : 1420;
+  // The stage is translated then scaled about (cx, oy); place subtitles under the window
+  // where it actually lands on screen after that transform.
+  const oy = cy - sw * 0.35;
+  const winBottomOnScreen = oy + shiftY + (winCenter + WINDOW_H / 2 - oy) * zoom;
+  const subY = w > 0.5 ? Math.min(1920 - 330, winBottomOnScreen + 44) : 1420;
   const disclaimerFrom = choreo.disclaimer ? at(choreo.disclaimer.from) : Infinity;
 
   return (
     <AbsoluteFill style={{ background: colors.ink }}>
-      <AbsoluteFill style={{ transform: `translateY(${shiftY}px) scale(${zoom})`, transformOrigin: `${cx}px ${cy - sw * 0.35}px` }}>
+      <AbsoluteFill style={{ transform: `translateY(${shiftY}px) scale(${zoom})`, transformOrigin: `${cx}px ${oy}px` }}>
         <AbsoluteFill style={{ clipPath: clip }}>
           <OffthreadVideo src={staticFile(`reels/${reel}/footage.mp4`)} />
-          <CoinLayer data={data} layer="back" candles={candles} reel={reel} />
+          <CoinLayer data={data} layer="back" candles={candles} reel={reel} debug={debug} />
           <OffthreadVideo src={staticFile(`reels/${reel}/person.webm`)} transparent muted />
         </AbsoluteFill>
         {/* Front coins may break out of the window's top edge, which sells the depth,
             but stop at its bottom edge so they never cross the subtitles. */}
         <AbsoluteFill style={{ clipPath: `inset(${Math.max(0, top - 260 * w)}px 0px ${bottom}px 0px)` }}>
-          <CoinLayer data={data} layer="front" candles={candles} reel={reel} />
+          <CoinLayer data={data} layer="front" candles={candles} reel={reel} debug={debug} />
         </AbsoluteFill>
         <StageOverlays data={data} />
       </AbsoluteFill>
@@ -115,8 +122,8 @@ const Stage: React.FC<{ data: ReelData; reel: string }> = ({ data, reel }) => {
   );
 };
 
-export const CoinReel: React.FC<CoinReelProps> = ({ reel }) => {
+export const CoinReel: React.FC<CoinReelProps> = ({ reel, debug }) => {
   const data = useReel(reel);
   if (!data) return null;
-  return <Stage data={data} reel={reel} />;
+  return <Stage data={data} reel={reel} debug={debug} />;
 };

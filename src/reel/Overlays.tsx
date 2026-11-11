@@ -196,7 +196,8 @@ const SplitLabels: React.FC<{ data: ReelData; start: number; fallAt: number; end
         const [x, y] = project(c[0], c[1], c[2]);
         const falling = g === 0 && t >= fallAt;
         return (
-          <div key={g} style={{ position: "absolute", left: x, top: y - 150, transform: "translateX(-50%)", opacity }}>
+          // Keep the tag on screen even when its group sits near the frame edge.
+          <div key={g} style={{ position: "absolute", left: Math.max(130, Math.min(950, x)), top: y - 150, transform: "translateX(-50%)", opacity }}>
             <Tag tone={falling ? "loss" : "cream"} size={34}>
               {GROUPS[g]}
               {falling ? " ▼" : ""}
