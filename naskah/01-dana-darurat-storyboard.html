@@ -1,0 +1,254 @@
+<title>Storyboard Dana Darurat</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap">
+<style>
+  /* Layout: one storyboard frame per spoken line, drawing beside the instructions; stacks on phones. */
+  :root {
+    --paper: #F7F0E6;      /* brand cream: the storyboard sheet */
+    --card: #FFFBF5;
+    --ink: #141012;        /* brand ink: text and the figure */
+    --muted: #5E5256;
+    --maroon: #7B1E2B;     /* brand maroon: your right hand, keywords */
+    --gold: #B8862E;       /* darkened brand gold so it reads on cream: animation that I add later */
+    --gold-soft: #D4A857;
+    --loss: #B8323C;
+    --line: #E6DACB;
+    --f-sans: "Montserrat", "Segoe UI", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 28px 64px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+  header { display: flex; flex-direction: column; gap: 10px; }
+  h1 { font-size: clamp(28px, 6vw, 44px); line-height: 1.1; font-weight: 900; margin: 0; text-wrap: balance; }
+  .lede { margin: 0; max-width: 62ch; color: var(--muted); font-weight: 500; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 22px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .legend div { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; min-width: 0; }
+  .legend svg { flex: none; }
+
+  .prep { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .prep div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font-size: 14.5px; min-width: 0; }
+  .prep b { display: block; font-size: 15px; margin-bottom: 4px; }
+
+  h2 { font-size: 22px; font-weight: 800; margin: 8px 0 0; }
+
+  .beats { display: flex; flex-direction: column; gap: 18px; }
+  .beat { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+  .beat svg.fig { width: 100%; height: auto; display: block; background: var(--paper); border-radius: 12px; }
+  .beat .txt { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .num { font-size: 13px; font-weight: 800; color: var(--maroon); letter-spacing: 0.06em; }
+  .say { font-size: 21px; font-weight: 800; line-height: 1.3; margin: 0; text-wrap: balance; }
+  .row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; font-size: 15px; }
+  .row .k { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 3px; }
+  .row.do .k { color: var(--maroon); }
+  .row.fx .k { color: var(--gold); }
+  .row.tip .k { color: var(--muted); }
+  .row p { margin: 0; font-weight: 500; }
+  .row.fx p { color: var(--muted); }
+  .kw { font-weight: 800; }
+
+  footer { font-size: 14px; color: var(--muted); max-width: 62ch; }
+
+  @media (max-width: 640px) {
+    .beat { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+    .beat svg.fig { max-width: 340px; margin: 0 auto; }
+    .row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Storyboard: Dana Darurat saat IHSG Jatuh</h1>
+    <p class="lede">Satu gambar untuk tiap kalimat. Ikuti posisi tangan di gambar sambil mengucapkan kalimatnya. Koin dan grafik berwarna emas tidak terlihat saat merekam, nanti saya tambahkan waktu mengedit. Jadi bayangkan saja benda itu ada.</p>
+  </header>
+
+  <section class="legend" aria-label="Cara membaca gambar">
+    <div><svg width="34" height="20" aria-hidden="true"><circle cx="17" cy="10" r="8" fill="#7B1E2B"/></svg>Tangan kanan Anda (di gambar ada di sisi kiri, karena orangnya menghadap Anda)</div>
+    <div><svg width="34" height="20" aria-hidden="true"><circle cx="17" cy="10" r="7" fill="#FFFBF5" stroke="#141012" stroke-width="3"/></svg>Tangan kiri Anda</div>
+    <div><svg width="34" height="20" aria-hidden="true"><path d="M3 10h22" stroke="#141012" stroke-width="5" stroke-dasharray="4 4" opacity=".35"/></svg>Posisi awal (samar)</div>
+    <div><svg width="34" height="20" aria-hidden="true"><path d="M3 10h20" stroke="#7B1E2B" stroke-width="3"/><path d="M22 4l8 6-8 6z" fill="#7B1E2B"/></svg>Arah gerakan</div>
+    <div><svg width="34" height="20" aria-hidden="true"><ellipse cx="17" cy="10" rx="9" ry="6" fill="#D4A857" stroke="#8A6318" stroke-width="1.5"/></svg>Animasi yang saya tambahkan nanti</div>
+  </section>
+
+  <section>
+    <h2>Sebelum mulai</h2>
+    <div class="prep" style="margin-top:12px">
+      <div><b>1. Rekam latar kosong</b>5 detik kursi tanpa Anda, kamera tidak digeser.</div>
+      <div><b>2. Duduk, tangan di meja</b>Diam 2 detik menatap kamera, lalu mulai bicara.</div>
+      <div><b>3. Gerak lebih lambat</b>Tahan tiap gerakan akhir sekitar 1 detik. Tangan tetap di dalam layar.</div>
+      <div><b>4. Salah ucap? Lanjut saja</b>Diam 2 detik, ulang kalimat itu dari awal. Saya potong nanti.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Adegan per kalimat</h2>
+    <div class="beats" id="beats" style="margin-top:12px"></div>
+  </section>
+
+  <footer>Gerakan di gambar adalah panduan, tidak harus persis. Yang penting arah gerakannya jelas dan tangan terlihat kamera. Sistem pelacak akan mengikuti tangan Anda di mana pun posisinya.</footer>
+</div>
+
+<script>
+(function () {
+  var C = { ink: "#141012", body: "#4A3F42", skin: "#C99A7A", maroon: "#7B1E2B", gold: "#D4A857", goldDark: "#8A6318", loss: "#B8323C", paper: "#F7F0E6", card: "#FFFBF5" };
+  var SR = [110, 132], SL = [190, 132]; // shoulders: your right is on the viewer's left
+  var REST = { R: [128, 252, "rest"], L: [172, 252, "rest"] };
+
+  function ik(S, H, side) {
+    var L1 = 60, L2 = 58, dx = H[0] - S[0], dy = H[1] - S[1];
+    var d = Math.max(Math.abs(L1 - L2) + 1, Math.min(L1 + L2 - 1, Math.hypot(dx, dy)));
+    var a = Math.atan2(dy, dx), t = Math.acos((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d));
+    var e1 = [S[0] + L1 * Math.cos(a + t), S[1] + L1 * Math.sin(a + t)];
+    var e2 = [S[0] + L1 * Math.cos(a - t), S[1] + L1 * Math.sin(a - t)];
+    var score = function (e) { return e[1] + 0.8 * Math.abs(e[0] - 150); };
+    return score(e1) > score(e2) ? e1 : e2;
+  }
+
+  function hand(H, side, state, ghost) {
+    var fill = side === "R" ? C.maroon : C.card, stroke = side === "R" ? C.maroon : C.ink;
+    var op = ghost ? ' opacity=".3"' : "";
+    var x = H[0], y = H[1];
+    if (state === "push") return '<rect x="' + (x - 7) + '" y="' + (y - 16) + '" width="14" height="32" rx="7" fill="' + fill + '" stroke="' + stroke + '" stroke-width="3"' + op + "/>";
+    if (state === "up") return '<path d="M' + (x - 16) + " " + (y - 4) + " Q" + x + " " + (y + 16) + " " + (x + 16) + " " + (y - 4) + ' Z" fill="' + fill + '" stroke="' + stroke + '" stroke-width="3" stroke-linejoin="round"' + op + "/>";
+    if (state === "down") return '<path d="M' + (x - 16) + " " + (y + 4) + " Q" + x + " " + (y - 14) + " " + (x + 16) + " " + (y + 4) + ' Z" fill="' + fill + '" stroke="' + stroke + '" stroke-width="3" stroke-linejoin="round"' + op + "/>";
+    if (state === "point") return '<circle cx="' + x + '" cy="' + y + '" r="10" fill="' + fill + '" stroke="' + stroke + '" stroke-width="3"' + op + '/><circle cx="' + x + '" cy="' + y + '" r="3" fill="' + (side === "R" ? C.card : C.ink) + '"' + op + "/>";
+    return '<circle cx="' + x + '" cy="' + y + '" r="10" fill="' + fill + '" stroke="' + stroke + '" stroke-width="3"' + op + "/>";
+  }
+
+  function arms(pose, ghost) {
+    var out = "";
+    [["R", SR], ["L", SL]].forEach(function (p) {
+      var side = p[0], S = p[1], h = pose[side];
+      var E = ik(S, h, side);
+      var dash = ghost ? ' stroke-dasharray="6 6" opacity=".3"' : "";
+      out += '<path d="M' + S[0] + " " + S[1] + " L" + E[0].toFixed(1) + " " + E[1].toFixed(1) + '" stroke="' + C.body + '" stroke-width="17" stroke-linecap="round" fill="none"' + dash + "/>";
+      out += '<path d="M' + E[0].toFixed(1) + " " + E[1].toFixed(1) + " L" + h[0] + " " + h[1] + '" stroke="' + C.skin + '" stroke-width="14" stroke-linecap="round" fill="none"' + dash + "/>";
+      out += hand(h, side, h[2], ghost);
+    });
+    return out;
+  }
+
+  function person(look) {
+    var hx = 150 + (look === "palm" ? 6 : 0), hy = 78 + (look === "palm" ? 6 : 0);
+    return '<rect x="0" y="262" width="300" height="78" fill="#D9CBB8"/>' +
+      '<path d="M104 128 Q150 116 196 128 L188 262 L112 262 Z" fill="' + C.body + '"/>' +
+      '<rect x="141" y="100" width="18" height="22" fill="' + C.skin + '"/>' +
+      '<circle cx="' + hx + '" cy="' + hy + '" r="29" fill="' + C.skin + '"/>' +
+      '<path d="M' + (hx - 30) + " " + (hy - 4) + " Q" + hx + " " + (hy - 46) + " " + (hx + 30) + " " + (hy - 4) + " Q" + hx + " " + (hy - 22) + " " + (hx - 30) + " " + (hy - 4) + 'Z" fill="' + C.ink + '"/>' +
+      (look === "palm"
+        ? '<path d="M' + (hx - 12) + " " + (hy + 4) + " q4 3 8 0 M" + (hx + 4) + " " + (hy + 4) + ' q4 3 8 0" stroke="' + C.ink + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+        : '<circle cx="' + (hx - 10) + '" cy="' + (hy + 2) + '" r="2.8" fill="' + C.ink + '"/><circle cx="' + (hx + 10) + '" cy="' + (hy + 2) + '" r="2.8" fill="' + C.ink + '"/>') +
+      (look === "smile" || look === "palm"
+        ? '<path d="M' + (hx - 9) + " " + (hy + 13) + " Q" + hx + " " + (hy + 20) + " " + (hx + 9) + " " + (hy + 13) + '" stroke="' + C.ink + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+        : '<path d="M' + (hx - 7) + " " + (hy + 15) + " h14" + '" stroke="' + C.ink + '" stroke-width="2.5" stroke-linecap="round"/>');
+  }
+
+  function arrow(a, b, bend, id) {
+    var mx = (a[0] + b[0]) / 2 + (bend || 0), my = (a[1] + b[1]) / 2 - Math.abs(bend || 0) * 0.3;
+    return '<path d="M' + a[0] + " " + a[1] + " Q" + mx + " " + my + " " + b[0] + " " + b[1] + '" stroke="' + C.maroon + '" stroke-width="3.5" fill="none" stroke-linecap="round" marker-end="url(#ah' + id + ')"/>';
+  }
+
+  function coin(x, y, s) { s = s || 1; return '<ellipse cx="' + x + '" cy="' + y + '" rx="' + 7 * s + '" ry="' + 5 * s + '" fill="' + C.gold + '" stroke="' + C.goldDark + '" stroke-width="1.5"/>'; }
+  function candles(n, slow) {
+    var out = "", xs = [24, 62, 238, 276, 44, 256, 20, 280];
+    for (var i = 0; i < n; i++) {
+      var x = xs[i], y = 20 + ((i * 53) % 150), h = 18 + ((i * 17) % 20);
+      out += '<g opacity="' + (slow ? 0.45 : 1) + '"><rect x="' + (x - 1) + '" y="' + (y - 7) + '" width="2" height="' + (h + 14) + '" fill="' + C.loss + '"/><rect x="' + (x - 5) + '" y="' + y + '" width="10" height="' + h + '" rx="1.5" fill="' + C.loss + '"/></g>';
+    }
+    return out;
+  }
+  function shield(glow) {
+    var out = (glow ? '<ellipse cx="150" cy="180" rx="122" ry="132" fill="none" stroke="' + C.gold + '" stroke-width="16" opacity=".22"/>' : "") +
+      '<ellipse cx="150" cy="180" rx="122" ry="132" fill="none" stroke="' + C.gold + '" stroke-width="2.5" stroke-dasharray="3 7"/>';
+    for (var i = 0; i < 14; i++) { var a = (i / 14) * Math.PI * 2 + 0.2; out += coin(150 + 122 * Math.cos(a), 180 + 132 * Math.sin(a), 1); }
+    return out;
+  }
+  function token(x, y, letter, label) {
+    return '<rect x="' + (x - 14) + '" y="' + (y - 14) + '" width="28" height="28" rx="6" fill="' + C.maroon + '"/><text x="' + x + '" y="' + (y + 5) + '" text-anchor="middle" font-size="13" font-weight="800" fill="' + C.card + '" font-family="Montserrat, sans-serif">' + letter + '</text><text x="' + x + '" y="' + (y + 28) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + C.ink + '" font-family="Montserrat, sans-serif">' + label + "</text>";
+  }
+  function label(x, y, t, color) { return '<text x="' + x + '" y="' + y + '" text-anchor="middle" font-size="12" font-weight="800" fill="' + (color || C.ink) + '" font-family="Montserrat, sans-serif">' + t + "</text>"; }
+
+  var FX = {
+    candles: function () { return candles(8, false) + label(150, 26, "IHSG ▼", C.loss); },
+    candlesSlow: function () { return candles(5, true); },
+    emerge: function () { var o = ""; [[182, 170, 1], [192, 150, 1.1], [174, 140, 1], [200, 124, 1.2], [168, 112, 1.1], [210, 100, 1], [186, 92, 1.2]].forEach(function (c) { o += coin(c[0], c[1], c[2]); }); return o; },
+    shield: function () { return shield(false); },
+    hits: function () { return shield(false) + token(26, 92, "PHK", "") + token(274, 168, "+", "Sakit") + token(30, 200, "⚒", "Motor"); },
+    rings: function () { var o = ""; for (var k = 0; k < 9; k++) { var y = 250 - k * 22; o += '<ellipse cx="150" cy="' + y + '" rx="96" ry="9" fill="none" stroke="' + C.gold + '" stroke-width="5" opacity="' + (0.5 + k * 0.05) + '"/>'; } return o + '<text x="40" y="150" font-size="44" font-weight="900" fill="' + C.goldDark + '" font-family="Montserrat, sans-serif">9</text>' + label(46, 170, "bulan", C.goldDark); },
+    ringsCalm: function () { var o = ""; for (var k = 0; k < 9; k++) o += '<ellipse cx="150" cy="' + (250 - k * 22) + '" rx="96" ry="9" fill="none" stroke="' + C.gold + '" stroke-width="5" opacity=".55"/>'; return o; },
+    deflect: function () { return '<polyline points="14,70 26,84 36,78 48,100 58,94 70,120" fill="none" stroke="' + C.loss + '" stroke-width="4" stroke-linejoin="round"/>' + label(42, 60, "Saham ▼", C.loss) + coin(88, 120) + coin(98, 140) + '<path d="M84 128 q-10 -26 14 -40" stroke="' + C.goldDark + '" stroke-width="2" fill="none" stroke-dasharray="3 4"/>' + coin(112, 84); },
+    pool: function () { var o = '<ellipse cx="150" cy="198" rx="44" ry="13" fill="' + C.gold + '" opacity=".35"/>'; [[130, 196], [150, 192], [170, 198], [140, 204], [160, 204], [150, 186]].forEach(function (c) { o += coin(c[0], c[1], 0.9); }); return o + label(150, 160, "Pasar uang", C.goldDark); },
+    pull: function () { var o = ""; [[84, 210], [100, 204], [116, 198], [128, 192]].forEach(function (c, i) { o += coin(c[0], c[1], 0.8 + i * 0.1); }); return o + '<path d="M60 222 L80 214 M58 206 L76 202 M62 236 L82 226" stroke="' + C.goldDark + '" stroke-width="2.5" stroke-linecap="round"/>'; },
+    glow: function () { return shield(true); },
+    split: function () { var o = "", g = [[56, 96, "Saham"], [244, 96, "Obligasi"], [52, 214, "Emas"], [248, 214, "Pasar uang"]]; g.forEach(function (c) { o += coin(c[0] - 8, c[1]) + coin(c[0] + 8, c[1] + 4) + coin(c[0], c[1] - 9) + label(c[0], c[1] + 26, c[2], C.goldDark); }); return o; },
+    fall: function () { var o = ""; [[244, 96, "Obligasi"], [52, 214, "Emas"], [248, 214, "Pasar uang"]].forEach(function (c) { o += coin(c[0] - 8, c[1]) + coin(c[0] + 8, c[1] + 4) + coin(c[0], c[1] - 9) + label(c[0], c[1] + 26, c[2], C.goldDark); }); o += '<g opacity=".9"><ellipse cx="18" cy="250" rx="7" ry="5" fill="' + C.loss + '"/><ellipse cx="30" cy="244" rx="7" ry="5" fill="' + C.loss + '"/><ellipse cx="20" cy="236" rx="7" ry="5" fill="' + C.loss + '"/></g>' + label(46, 96, "Saham ▼", C.loss) + '<path d="M22 108 Q12 170 22 228" stroke="' + C.loss + '" stroke-width="2" stroke-dasharray="3 5" fill="none"/>'; return o; },
+    calm: function () { return shield(false); },
+    none: function () { return ""; }
+  };
+
+  var BEATS = [
+    { say: "IHSG lagi jatuh. Hampir semua saham merah.", from: { R: [118, 168, "down"], L: REST.L }, to: { R: [118, 236, "down"], L: REST.L }, arrows: [["R", 0]], fx: "candles",
+      do: "Angkat tangan kanan ke depan dada, telapak menghadap bawah. Turunkan pelan sampai ke meja, seperti mengikuti sesuatu yang jatuh.", show: "Candlestick merah berjatuhan di sekitar Anda, ada label IHSG turun." },
+    { say: "Tapi aku tenang-tenang aja.", from: REST, to: REST, fx: "candlesSlow", look: "smile",
+      do: "Kedua tangan diam di meja. Tarik napas, senyum tipis, diam 1 detik.", show: "Candlestick melambat dan memudar." },
+    { say: "Karena sebelum investasi, aku siapin ini dulu.", from: REST, to: { R: REST.R, L: [184, 186, "up"] }, arrows: [["L", -20]], fx: "emerge", look: "palm",
+      do: "Angkat satu telapak tangan ke depan dada, menghadap ke atas (boleh kiri atau kanan). Tahan 2 detik dan lihat ke telapak itu, seolah ada sesuatu di sana.", show: "Satu koin muncul di telapak, lalu puluhan koin keluar dan mulai berputar. Layar berubah jadi bingkai sinematik." },
+    { say: "Dana darurat. Uang khusus buat kejadian yang nggak terduga:", from: { R: [136, 186, "rest"], L: [164, 186, "rest"] }, to: { R: [62, 176, "up"], L: [238, 176, "up"] }, arrows: [["R", 0], ["L", 0]], fx: "shield", ball: true,
+      do: "Dekatkan kedua tangan di depan dada seperti memegang bola sebesar kepala. Lalu buka pelan ke samping kiri dan kanan selebar bahu atau lebih.", show: "Koin membentuk perisai bulat yang mengelilingi badan Anda." },
+    { say: "kena PHK... sakit... motor rusak.", from: { R: [104, 196, "push"], L: REST.L }, to: { R: [66, 178, "push"], L: REST.L }, arrows: [["R", 0]], fx: "hits",
+      do: "Setiap menyebut satu kata (PHK, sakit, motor rusak), kibaskan tangan kanan sedikit ke samping seperti menepis. Tiga kali, satu per kata. Gerakan kecil saja.", show: "Ikon PHK, sakit, dan motor rusak terbang menabrak perisai lalu terpental." },
+    { say: "Punyaku cukup buat sembilan bulan biaya hidup.", from: { R: [132, 244, "down"], L: REST.L }, to: { R: [132, 164, "down"], L: REST.L }, arrows: [["R", 0]], fx: "rings",
+      do: "Telapak tangan kanan menghadap bawah di depan perut, lalu naikkan pelan sampai depan dada, seperti menunjukkan tumpukan yang makin tinggi.", show: "Sembilan cincin koin tersusun dari bawah ke atas, angka 1 sampai 9 bulan." },
+    { say: "Jadi kalaupun penghasilan berhenti, aku masih bisa hidup normal sembilan bulan.", from: { R: [132, 164, "down"], L: REST.L }, to: REST, arrows: [["R", 0]], fx: "ringsCalm",
+      do: "Turunkan tangan dengan santai ke meja. Bicara biasa sambil menatap kamera.", show: "Tumpukan cincin berputar pelan." },
+    { say: "Dan ini penting: dana darurat aku nggak taruh di saham.", from: { R: [118, 192, "push"], L: REST.L }, to: { R: [56, 186, "push"], L: REST.L }, arrows: [["R", 0]], fx: "deflect",
+      do: "Dorong tangan kanan ke samping, telapak menghadap keluar, seperti menolak sesuatu. Tahan 1 detik.", show: "Grafik saham merah muncul di samping. Koin yang mendekat ke grafik dibelokkan menjauh." },
+    { say: "Aku taruh di reksa dana pasar uang.", from: REST, to: { R: [136, 222, "up"], L: [164, 222, "up"] }, arrows: [["R", 0], ["L", 0]], fx: "pool", look: "palm",
+      do: "Tangkupkan kedua tangan di depan perut seperti menampung air. Lirik ke tangan sebentar.", show: "Koin berkumpul jadi pusaran tenang di atas tangan, dengan label Reksa dana pasar uang." },
+    { say: "Risikonya rendah, dan bisa dicairkan cepat. Umumnya satu sampai dua hari kerja.", from: { R: [66, 214, "up"], L: [164, 222, "up"] }, to: { R: [138, 184, "up"], L: REST.L }, arrows: [["R", -10]], fx: "pull",
+      do: "Rentangkan tangan kanan ke samping depan, lalu saat mengucapkan “dicairkan cepat” tarik tangan itu dengan cepat ke depan dada.", show: "Koin melesat dari pusaran masuk ke telapak tangan." },
+    { say: "Naiknya memang nggak seberapa. Tapi tugasnya bukan bikin kaya. Tugasnya menjaga.", from: { R: [100, 206, "up"], L: [200, 206, "up"] }, to: { R: [150, 168, "rest"], L: REST.L }, arrows: [["R", 10]], fx: "glow",
+      do: "Buka kedua tangan dengan santai. Saat mengucapkan “menjaga”, taruh tangan kanan di dada.", show: "Perisai koin menyala sedikit lebih terang." },
+    { say: "Sisanya baru aku investasikan. Itu pun aku sebar.", from: { R: [142, 190, "rest"], L: [158, 190, "rest"] }, to: { R: [58, 152, "down"], L: [242, 152, "down"] }, arrows: [["R", 0], ["L", 0]], fx: "split",
+      do: "Rapatkan kedua tangan di tengah dada, lalu kibaskan keluar ke kiri dan kanan dengan tegas, seperti menebar sesuatu.", show: "Kawanan koin terpecah jadi empat kelompok: Saham, Obligasi, Emas, Pasar uang." },
+    { say: "Jadi waktu saham turun begini, yang lain masih nahan.", from: { R: [66, 160, "down"], L: [234, 160, "down"] }, to: { R: [66, 238, "down"], L: [234, 160, "down"] }, arrows: [["R", 0]], fx: "fall",
+      do: "Kedua tangan masih terbuka di samping. Turunkan pelan tangan kanan saja, tangan kiri tetap di atas.", show: "Kelompok Saham berubah merah dan jatuh, tiga lainnya tetap melayang. Label Saham saya taruh di sisi tangan yang Anda turunkan." },
+    { say: "Makanya aku nggak panik jual. Bukan karena berani. Karena siap.", from: { R: [66, 238, "down"], L: [234, 160, "down"] }, to: REST, arrows: [["R", 0], ["L", 0]], fx: "calm", look: "smile",
+      do: "Kembalikan kedua tangan ke meja dengan tenang. Tatap kamera, bicara lebih pelan.", show: "Perisai berputar tenang. Layar kembali penuh." },
+    { say: "Dana daruratmu udah cukup buat berapa bulan? Tulis di komentar.", from: REST, to: { R: [122, 192, "point"], L: REST.L }, arrows: [["R", -14]], fx: "none", look: "smile",
+      do: "Senyum, lalu tunjuk ringan ke arah kamera dengan tangan kanan.", show: "Teks kecil di bawah: Edukasi, bukan ajakan jual/beli efek." }
+  ];
+
+  var root = document.getElementById("beats");
+  BEATS.forEach(function (b, i) {
+    var id = i;
+    var fx = FX[b.fx]();
+    var ball = b.ball ? '<circle cx="150" cy="186" r="22" fill="none" stroke="' + C.ink + '" stroke-width="2" stroke-dasharray="4 5" opacity=".45"/>' : "";
+    var arr = (b.arrows || []).map(function (a) { return arrow(b.from[a[0]], b.to[a[0]], a[1], id); }).join("");
+    var same = JSON.stringify(b.from) === JSON.stringify(b.to);
+    var svg = '<svg class="fig" viewBox="0 0 300 340" role="img" aria-label="Adegan ' + (i + 1) + ": " + b.do.replace(/"/g, "") + '">' +
+      '<defs><marker id="ah' + id + '" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="' + C.maroon + '"/></marker></defs>' +
+      fx.replace(/^/, "") + person(b.look) + (same ? "" : arms(b.from, true)) + ball + arms(b.to, false) + arr + "</svg>";
+    var el = document.createElement("article");
+    el.className = "beat";
+    el.innerHTML = svg +
+      '<div class="txt"><div class="num">ADEGAN ' + (i + 1) + " DARI " + BEATS.length + '</div>' +
+      '<p class="say">“' + b.say + '”</p>' +
+      '<div class="row do"><span class="k">Lakukan</span><p>' + b.do + "</p></div>" +
+      '<div class="row fx"><span class="k">Muncul nanti</span><p>' + b.show + "</p></div></div>";
+    root.appendChild(el);
+  });
+})();
+</script>

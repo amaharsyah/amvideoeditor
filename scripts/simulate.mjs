@@ -227,9 +227,12 @@ function target(c, f, t, m) {
     case "fall": {
       const g = c.i % 4;
       const s = SPLIT[g];
-      let cx = clampX(b.cx + s.dx * b.sw);
-      let cy = b.cy + s.dy * b.sw;
-      if (m.mode === "fall" && g === 0) cy += Math.min(1, local / 1.4) ** 2 * b.sw * 2.2;
+      // choreo.stocksSide puts the Saham group on the side of the hand that drops.
+      const flip = choreo.stocksSide === "screenLeft" ? -1 : 1;
+      const k = m.mode === "fall" && g === 0 ? Math.min(1, local / 1.6) ** 2 : 0;
+      // Saham falls past the group below it, drifting toward the frame edge.
+      const cx = clampX(b.cx + flip * (s.dx + 0.45 * k) * b.sw);
+      const cy = b.cy + s.dy * b.sw + k * b.sw * 3.4;
       const rr = b.sw * 0.36;
       const th = c.phase + t * 1.8 * c.dir;
       return { p: [cx + rr * Math.sqrt(1 - c.u * c.u) * Math.cos(th), cy + rr * c.u * 0.8, rr * Math.sin(th)], k: 10 };
