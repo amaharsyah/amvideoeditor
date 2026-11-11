@@ -81,8 +81,12 @@ const Stage: React.FC<{ data: ReelData; reel: string; debug?: string }> = ({ dat
       <AbsoluteFill style={{ transform: `translateY(${shiftY}px) scale(${zoom})`, transformOrigin: `${cx}px ${oy}px` }}>
         <AbsoluteFill style={{ clipPath: clip }}>
           <OffthreadVideo src={staticFile(`reels/${reel}/footage.mp4`)} />
-          <CoinLayer data={data} layer="back" candles={candles} reel={reel} debug={debug} />
-          <OffthreadVideo src={staticFile(`reels/${reel}/person.webm`)} transparent muted />
+          {debug === "noback" ? null : <CoinLayer data={data} layer="back" candles={candles} reel={reel} debug={debug} />}
+          {/* Positioned like the canvases, so it paints in DOM order (above the back coins).
+              A static element would paint under any positioned sibling. */}
+          <AbsoluteFill>
+            <OffthreadVideo src={staticFile(`reels/${reel}/person.webm`)} transparent muted />
+          </AbsoluteFill>
         </AbsoluteFill>
         {/* Front coins may break out of the window's top edge, which sells the depth,
             but stop at its bottom edge so they never cross the subtitles. */}
