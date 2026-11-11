@@ -9,3 +9,11 @@ out
 
 # Local tooling
 bin/whisper.cpp
+
+# Reel working media (large; regenerate with scripts/prepare-reel.mjs)
+public/reels/_test/
+public/reels/*/work/
+public/reels/*/footage.mp4
+public/reels/*/person.webm
+public/reels/*/sim.bin
+bin/mediapipe

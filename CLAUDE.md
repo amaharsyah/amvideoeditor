@@ -1,3 +1,24 @@
+# amvideoeditor
+
+Vertical reels (1080x1920, 30fps) for a personal-finance creator, in Indonesian.
+Brand and editing rules: `brand/STYLE.md`. Scripts per reel: `naskah/`.
+
+## Coin-effect reels (CoinReel composition)
+
+1. Put the raw take in `public/recordings/`, write `public/reels/<id>/choreo.json`
+   (cues are phrases from the script, resolved against the transcript).
+2. `node scripts/prepare-reel.mjs public/recordings/<take>.mp4 <id>`
+   (footage, whisper transcript, MediaPipe tracking + person matte, coin simulation).
+   After editing choreo.json only: add `--from simulate`.
+3. Preview a frame: `npx remotion still CoinReel out/x.png --frame=N --props='{"reel":"<id>"}' --gl=swangle`
+4. Render: `npx remotion render CoinReel out/<id>.mp4 --props='{"reel":"<id>"}' --gl=swangle --concurrency=2`
+   (run stills one at a time; parallel CLI runs collide).
+
+Setup on a fresh machine: whisper.cpp in `bin/whisper.cpp` with `ggml-small.bin`,
+`pip install -r scripts/requirements.txt`, MediaPipe models in `bin/mediapipe/`
+(hand_landmarker.task, pose_landmarker.task, selfie_multiclass.tflite), and on Linux `libegl1 libgles2`.
+Large media in `public/reels/*` is gitignored; `public/reels/_test` uses third-party footage and must never be committed.
+
 <!-- antislop:start -->
 ## antislop
 For UI, copy, people, mobile layout, or code comments work, read these installed skill files directly (use these paths even if a same-named global skill exists):

@@ -1,0 +1,43 @@
+{
+  "fps": 30,
+  "modes": [
+    { "at": 0, "mode": "idle" },
+    { "at": { "phrase": "siapin ini dulu", "edge": "start" }, "mode": "emerge", "spread": 1.4 },
+    { "at": { "phrase": "dana darurat", "edge": "end" }, "mode": "shield" },
+    { "at": { "phrase": "sembilan bulan biaya hidup", "edge": "start", "offset": -0.2 }, "mode": "rings" },
+    { "at": { "phrase": "nggak taruh di saham", "edge": "start" }, "mode": "deflect" },
+    { "at": { "phrase": "pasar uang", "edge": "start" }, "mode": "pool" },
+    { "at": { "phrase": "dicairkan cepat", "edge": "start" }, "mode": "pull" },
+    { "at": { "phrase": "naiknya", "edge": "start" }, "mode": "glow" },
+    { "at": { "phrase": "aku sebar", "edge": "start" }, "mode": "split" },
+    { "at": { "phrase": "saham turun", "edge": "start" }, "mode": "fall" },
+    { "at": { "phrase": "nggak panik", "edge": "start" }, "mode": "calm" }
+  ],
+  "events": [
+    { "at": { "phrase": "phk", "edge": "start", "offset": 0.1 }, "type": "hit", "label": "PHK", "icon": "briefcase", "side": "right", "dy": -0.5 },
+    { "at": { "phrase": "sakit", "edge": "start", "offset": 0.1 }, "type": "hit", "label": "Sakit", "icon": "cross", "side": "left", "dy": 0.2 },
+    { "at": { "phrase": "motor rusak", "edge": "start", "offset": 0.1 }, "type": "hit", "label": "Motor rusak", "icon": "wrench", "side": "right", "dy": 0.8 }
+  ],
+  "framing": [
+    { "at": 0, "mode": "full" },
+    { "at": { "phrase": "siapin ini dulu", "edge": "start" }, "mode": "window" },
+    { "at": { "phrase": "nggak panik", "edge": "start" }, "mode": "full" }
+  ],
+  "candles": {
+    "from": 0,
+    "slowAt": { "phrase": "tenang", "edge": "start" },
+    "to": { "phrase": "siapin ini dulu", "edge": "end" }
+  },
+  "hook": { "text": "IHSG ▼", "to": { "phrase": "tenang", "edge": "end", "offset": 0.4 } },
+  "keywords": ["dana darurat", "pasar uang"],
+  "sfx": [
+    { "at": 0, "file": "36_cinematic-suspense-riser.mp3", "volume": 0.18 },
+    { "at": { "phrase": "siapin ini dulu", "edge": "start" }, "file": "28_whoosh-wind.mp3", "volume": 0.35 },
+    { "at": { "phrase": "phk", "edge": "start", "offset": 0.1 }, "file": "12_ding-sound-effect_2.mp3", "volume": 0.2 },
+    { "at": { "phrase": "sakit", "edge": "start", "offset": 0.1 }, "file": "12_ding-sound-effect_2.mp3", "volume": 0.2 },
+    { "at": { "phrase": "motor rusak", "edge": "start", "offset": 0.1 }, "file": "12_ding-sound-effect_2.mp3", "volume": 0.2 },
+    { "at": { "phrase": "dicairkan cepat", "edge": "start" }, "file": "28_whoosh-wind.mp3", "volume": 0.3 },
+    { "at": { "phrase": "aku sebar", "edge": "start" }, "file": "28_whoosh-wind.mp3", "volume": 0.3 }
+  ],
+  "disclaimer": { "from": { "phrase": "nggak panik", "edge": "start" }, "text": "Edukasi, bukan ajakan jual/beli efek." }
+}
